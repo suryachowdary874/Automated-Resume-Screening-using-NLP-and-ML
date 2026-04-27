@@ -9,6 +9,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # ---------------- BERT MODEL ----------------
 vectorizer = TfidfVectorizer()
+def extract_text(file):
+    text = ""
+    with pdfplumber.open(file) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text() or ""
+    return text
 uploaded_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"])
 resume_text = extract_text(uploaded_file)
 
