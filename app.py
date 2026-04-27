@@ -9,7 +9,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # ---------------- BERT MODEL ----------------
 vectorizer = TfidfVectorizer()
-uploaded_file = st.file_uploader(...)
+uploaded_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"])
 resume_text = extract_text(uploaded_file)
 
 vectorizer = TfidfVectorizer()
