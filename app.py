@@ -9,11 +9,19 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # ---------------- BERT MODEL ----------------
 vectorizer = TfidfVectorizer()
+import pdfplumber
+
 def extract_text(file):
     text = ""
-    with pdfplumber.open(file) as pdf:
-        for page in pdf.pages:
-            text += page.extract_text() or ""
+    try:
+        with pdfplumber.open(file) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:   # ✅ avoid None error
+                    text += page_text
+    except Exception as e:
+        text = "Error reading PDF. Please upload a valid text-based resume."
+
     return text
 uploaded_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"])
 resume_text = extract_text(uploaded_file)
