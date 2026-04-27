@@ -1,197 +1,101 @@
 import streamlit as st
 import pdfplumber
 import re
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from sklearn.feature_extraction.text import TfidfVectorizer
+# ---------------------- PAGE CONFIG ----------------------
+st.set_page_config(page_title="AI Resume Analyzer", layout="centered")
 
-# ---------------- BERT MODEL ----------------
-vectorizer = TfidfVectorizer()
-import pdfplumber
+st.title("AI Resume Analyzer 🔍")
+st.write("Smart Resume Screening + Hiring Decision System")
 
+# ---------------------- CLEAN TEXT ----------------------
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z0-9 ]', ' ', text)
+    return text
+
+# ---------------------- EXTRACT TEXT ----------------------
 def extract_text(file):
     text = ""
     try:
         with pdfplumber.open(file) as pdf:
             for page in pdf.pages:
                 page_text = page.extract_text()
-                if page_text:   # ✅ avoid None error
+                if page_text:
                     text += page_text
-    except Exception as e:
-        text = "Error reading PDF. Please upload a valid text-based resume."
-
-    return text
-uploaded_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"])
-resume_text = extract_text(uploaded_file)
-
-vectorizer = TfidfVectorizer()
-vectors = vectorizer.fit_transform([resume_text])
-
-# ---------------- CLEAN TEXT ----------------
-def clean_text(text):
-    text = text.lower()
-    text = re.sub(r'[^a-zA-Z0-9 ]', ' ', text)
+    except:
+        return ""
     return text
 
-# ---------------- EXTRACT PDF TEXT ----------------
-def extract_text(file):
-    text = ""
-    with pdfplumber.open(file) as pdf:
-        for page in pdf.pages:
-            text += page.extract_text() or ""
-    return text
-
-# ---------------- SKILL DICTIONARY ----------------
+# ---------------------- JOB ROLES ----------------------
 job_roles = {
     "Data Scientist": [
         "python","machine learning","deep learning","nlp","statistics",
         "data analysis","pandas","numpy","scikit learn","sql",
-        "data visualization","matplotlib","seaborn","tableau",
-        "power bi","linear algebra"
+        "matplotlib","seaborn","tableau","power bi","linear algebra"
     ],
-
     "Web Developer": [
         "html","css","javascript","react","node","express",
-        "mongodb","mysql","api","frontend","backend"
+        "mongodb","mysql","django","flask"
     ],
-
-    "AI Engineer": [
-        "deep learning","neural networks","cnn","rnn","transformers",
-        "tensorflow","pytorch","nlp","computer vision"
-    ],
-
-    "Java Developer": [
-        "java","spring","spring boot","hibernate","jdbc",
-        "multithreading","collections","oops"
-    ],
-
-    "ML Engineer": [
-        "machine learning","model deployment","mlops","docker",
-        "kubernetes","feature engineering","pipeline","scikit learn"
+    "Android Developer": [
+        "java","kotlin","android","xml","firebase","api"
     ]
 }
 
-# ---------------- UI ----------------
-st.set_page_config(page_title="AI Resume Analyzer", layout="wide")
-
-st.title("AI Resume Analyzer 🔍")
-st.write("Smart Resume Screening + Hiring Decision System")
-
+# ---------------------- UI ----------------------
 role = st.selectbox("Select Job Role", list(job_roles.keys()))
-cutoff = st.slider("Select Cutoff (%)", 0, 100, 30)
+cutoff = st.slider("Select Cutoff (%)", 0, 100, 50)
 
-uploaded_file = st.file_uploader("Upload Resume (PDF)", type=["pdf"])
+uploaded_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"])
 
-# ---------------- MAIN LOGIC ----------------
-if uploaded_file:
+# ---------------------- MAIN LOGIC ----------------------
+if uploaded_file is not None:
 
-    st.success("Resume uploaded successfully!")
+    st.info("Processing resume...")
 
-    raw_text = extract_text(uploaded_file)
-    text = clean_text(raw_text)
+    resume_text = extract_text(uploaded_file)
 
-    job_desc = " ".join(job_roles[role])
-
-    # ---------- TF-IDF ----------
-    vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1,2))
-    vectors = vectorizer.fit_transform([text, job_desc])
-    tfidf_score = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
-
-    # ---------- BERT ----------
-    emb1 = bert_model.encode(text)
-    emb2 = bert_model.encode(job_desc)
-    bert_score = cosine_similarity([emb1], [emb2])[0][0]
-
-    # ---------- FINAL SCORE ----------
-    similarity = max(tfidf_score, bert_score)
-    score = round(similarity * 100, 2)
-
-    # ---------- SKILL MATCH ----------
-    skills = job_roles[role]
-    matched = [s for s in skills if s in text]
-    missing = [s for s in skills if s not in text]
-
-    # ---------- RESULT ----------
-    st.subheader("Match Score")
-    st.progress(int(score))
-    st.write(f"{score} %")
-
-    if score >= cutoff:
-        st.success("Selected ✅")
-        show_questions = True
-    elif score >= (cutoff - 10):
-        st.warning("Near selection (Can be selected for Intership)")
-        show_questions = True
-  
-
+    if resume_text.strip() == "":
+        st.error("❌ Could not extract text. Try another PDF.")
     else:
-        st.error("Not Selected ❌")
-        show_questions = False
+        resume_text = clean_text(resume_text)
 
-    # ---------- SKILLS ----------
-    st.subheader("Matched Skills")
-    st.write(", ".join(matched))
+        # Convert job skills into text
+        job_text = " ".join(job_roles[role])
 
-    st.subheader("Missing Skills")
-    st.write(", ".join(missing))
+        # TF-IDF Vectorization
+        vectorizer = TfidfVectorizer()
+        vectors = vectorizer.fit_transform([resume_text, job_text])
 
-    # ---------- QUESTIONS ----------
-    if show_questions:
+        # Cosine Similarity
+        similarity = cosine_similarity(vectors[0], vectors[1])[0][0]
 
-        st.subheader("Suggested Interview Questions 📚")
+        score = round(similarity * 100, 2)
 
-        if role == "Data Scientist":
-            questions = [
-                "Explain data science lifecycle",
-                "What is EDA?",
-                "How do you handle missing data?",
-                "Explain feature selection",
-                "What is hypothesis testing?",
-                "Difference between classification and regression",
-                "Explain precision and recall",
-                "What is overfitting?"
-            ]
+        st.subheader("📊 Match Score")
+        st.progress(int(score))
+        st.write(f"**Score: {score}%**")
 
-        elif role == "Web Developer":
-            questions = [
-                "Explain HTML, CSS, JS",
-                "What is DOM?",
-                "What is REST API?",
-                "Frontend vs Backend",
-                "Explain React",
-                "What is responsive design?"
-            ]
+        # ---------------------- DECISION ----------------------
+        if score >= cutoff:
+            st.success("✅ Selected for Interview")
+        elif score >= cutoff - 10:
+            st.warning("⚠ Near Selection (Consider Internship)")
+        else:
+            st.error("❌ Rejected")
 
-        elif role == "AI Engineer":
-            questions = [
-                "What is deep learning?",
-                "Explain neural networks",
-                "What is CNN?",
-                "What is RNN?",
-                "Explain transformers"
-            ]
+        # ---------------------- SKILL MATCH ----------------------
+        st.subheader("🧠 Skill Analysis")
 
-        elif role == "Java Developer":
-            questions = [
-                "Explain OOP concepts",
-                "What is JVM?",
-                "What is Spring Boot?",
-                "Explain multithreading"
-            ]
+        matched_skills = []
+        for skill in job_roles[role]:
+            if skill in resume_text:
+                matched_skills.append(skill)
 
-        elif role == "ML Engineer":
-            questions = [
-                "What is MLOps?",
-                "What is model deployment?",
-                "Explain pipelines",
-                "What is feature engineering"
-            ]
+        st.write("**Matched Skills:**", matched_skills if matched_skills else "None")
 
-        for q in questions:
-            st.write(f"- {q}")
-
-    # ---------- EXTRACTED TEXT ----------
-    st.subheader("Extracted Text")
-    st.write(raw_text)
+        missing_skills = list(set(job_roles[role]) - set(matched_skills))
+        st.write("**Missing Skills:**", missing_skills if missing_skills else "None")
