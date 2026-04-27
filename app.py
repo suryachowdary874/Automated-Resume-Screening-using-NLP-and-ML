@@ -8,7 +8,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # ---------------- BERT MODEL ----------------
-bert_model = SentenceTransformer('all-MiniLM-L6-v2')
+vectorizer = TfidfVectorizer()
+vectors = vectorizer.fit_transform([resume_text])
 
 # ---------------- CLEAN TEXT ----------------
 def clean_text(text):
