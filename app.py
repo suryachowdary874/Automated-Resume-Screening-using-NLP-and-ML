@@ -9,6 +9,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # ---------------- BERT MODEL ----------------
 vectorizer = TfidfVectorizer()
+uploaded_file = st.file_uploader(...)
+resume_text = extract_text(uploaded_file)
+
+vectorizer = TfidfVectorizer()
 vectors = vectorizer.fit_transform([resume_text])
 
 # ---------------- CLEAN TEXT ----------------
