@@ -75,20 +75,20 @@ if uploaded_file is not None:
 
         score = round(similarity * 100, 2)
 
-        st.subheader("📊 Match Score")
+        st.subheader(" Match Score")
         st.progress(int(score))
         st.write(f"**Score: {score}%**")
 
         # ---------------------- DECISION ----------------------
         if score >= cutoff:
-            st.success("✅ Selected for Interview")
+            st.success("Selected for Interview")
         elif score >= cutoff - 10:
-            st.warning("⚠ Near Selection (Consider Internship)")
+            st.warning("Near Selection (Consider Internship)")
         else:
-            st.error("❌ Rejected")
+            st.error("Rejected")
 
         # ---------------------- SKILL MATCH ----------------------
-        st.subheader("🧠 Skill Analysis")
+        st.subheader("Skill Analysis")
 
         matched_skills = []
         for skill in job_roles[role]:
