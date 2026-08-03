@@ -38,7 +38,7 @@ job_roles = {
     ],
     "Web Developer": [
         "html","css","javascript","react","node","express",
-        "mongodb","mysql","django","flask"
+        "mongodb","mysql","django","flask","fast api"
     ],
     "Android Developer": [
         "java","kotlin","android","xml","firebase","api"
